@@ -1,0 +1,38 @@
+:root {
+  --bg-start: #f2f6fc;
+  --bg-end: #e7eef8;
+  --surface: #ffffff;
+  --surface-soft: #f8fbff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --primary: #0e4f87;
+  --primary-hover: #0b3f6b;
+  --border: #d8e2ec;
+  --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: var(--text);
+  background: linear-gradient(160deg, var(--bg-start), var(--bg-end));
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}

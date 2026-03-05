@@ -6,16 +6,37 @@ import { hashPassword, verifyPasswordTransitionSafe } from "../utils/password.js
 
 const router = express.Router();
 
+const EMPLOYEE_TABLE_PRIMARY = "Employees";
+const EMPLOYEE_TABLE_FALLBACK = "employees";
+
+const shouldRetryWithFallback = (err) => {
+  return err && err.code === "ER_NO_SUCH_TABLE";
+};
+
+const queryEmployees = async (sqlBuilder, params = []) => {
+  try {
+    return await pool.query(sqlBuilder(EMPLOYEE_TABLE_PRIMARY), params);
+  } catch (err) {
+    if (!shouldRetryWithFallback(err)) throw err;
+    return await pool.query(sqlBuilder(EMPLOYEE_TABLE_FALLBACK), params);
+  }
+};
+
 // ===============================
 // EMPLOYEE LOGIN
 // ===============================
 router.post("/login", async (req, res) => {
   try {
-    const { emp_id, password } = req.body;
+    const emp_id = String(req.body?.emp_id || "").trim();
+    const password = String(req.body?.password || "");
 
-    const [rows] = await pool.query(
-      `SELECT emp_id, emp_name, email, phone, department, role, joining_date, password
-       FROM Employees
+    if (!emp_id || !password) {
+      return res.status(400).json({ message: "emp_id and password are required" });
+    }
+
+    const [rows] = await queryEmployees(
+      (table) => `SELECT emp_id, emp_name, email, phone, department, role, joining_date, password
+       FROM ${table}
        WHERE emp_id = ?`,
       [emp_id]
     );
@@ -32,7 +53,10 @@ router.post("/login", async (req, res) => {
 
     if (needsUpgrade) {
       const upgradedHash = await hashPassword(password);
-      await pool.query("UPDATE Employees SET password = ? WHERE emp_id = ?", [upgradedHash, dbUser.emp_id]);
+      await queryEmployees(
+        (table) => `UPDATE ${table} SET password = ? WHERE emp_id = ?`,
+        [upgradedHash, dbUser.emp_id]
+      );
     }
 
     const { password: _password, ...user } = dbUser;
@@ -55,16 +79,18 @@ router.post("/login", async (req, res) => {
 router.get("/employees", authenticateToken, requireRole("employee", "admin"), async (req, res) => {
   try {
     const { exclude } = req.query;
-    let query = "SELECT emp_id, emp_name FROM Employees";
+    let query = (table) => `SELECT emp_id, emp_name FROM ${table}`;
     const params = [];
 
     if (exclude) {
-      query += " WHERE emp_id <> ?";
+      query = (table) => `SELECT emp_id, emp_name FROM ${table} WHERE emp_id <> ?`;
       params.push(exclude);
     }
 
-    query += " ORDER BY emp_name ASC";
-    const [rows] = await pool.query(query, params);
+    const [rows] = await queryEmployees(
+      (table) => `${query(table)} ORDER BY emp_name ASC`,
+      params
+    );
     res.json(rows);
   } catch (err) {
     console.error("Employee list error:", err);
@@ -92,14 +118,17 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "emp_id, emp_name, email and password are required" });
     }
 
-    const [exists] = await pool.query("SELECT emp_id FROM Employees WHERE emp_id = ?", [emp_id]);
+    const [exists] = await queryEmployees(
+      (table) => `SELECT emp_id FROM ${table} WHERE emp_id = ?`,
+      [emp_id]
+    );
     if (exists.length > 0) {
       return res.status(409).json({ message: "Employee ID already exists" });
     }
 
     const passwordHash = await hashPassword(password);
-    await pool.query(
-      `INSERT INTO Employees
+    await queryEmployees(
+      (table) => `INSERT INTO ${table}
        (emp_id, emp_name, email, phone, department, role, joining_date, password)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [emp_id, emp_name, email, phone, department, role, joining_date, passwordHash]

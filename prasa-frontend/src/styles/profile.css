@@ -1,0 +1,69 @@
+.profile-time-card {
+  margin-top: 16px;
+  border: 1px solid #cfdded;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(21, 53, 93, 0.08);
+  padding: 18px;
+}
+
+.profile-live-time {
+  text-align: center;
+  font-size: clamp(32px, 5.4vw, 54px);
+  letter-spacing: 0.8px;
+  color: #102f52;
+  font-weight: 500;
+}
+
+.profile-location {
+  width: fit-content;
+  margin: 14px auto 0;
+  border: 1px solid #cde4dd;
+  border-radius: 999px;
+  background: #ebf8f2;
+  padding: 8px 16px;
+  color: #1d8e5f;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.profile-signal {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 14px;
+  color: #4f6378;
+  font-weight: 600;
+}
+
+.profile-attendance-actions {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.profile-check-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.profile-check-btn.in {
+  background: #1fb35f;
+  box-shadow: 0 10px 18px rgba(31, 179, 95, 0.3);
+}
+
+.profile-check-btn.out {
+  background: #ea5454;
+  box-shadow: 0 10px 18px rgba(234, 84, 84, 0.3);
+}
+
+@media (max-width: 600px) {
+  .profile-attendance-actions {
+    grid-template-columns: 1fr;
+  }
+}
